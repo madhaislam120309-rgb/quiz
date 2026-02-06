@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizWise</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(135deg,#ff9a9e,#fad0c4,#a18cd1,#fbc2eb);
+min-height:100vh;padding-top:70px;padding-bottom:50px;}
+.navbar{position:fixed;top:0;left:0;width:100%;background:#6a11cb;color:white;padding:12px 25px;display:flex;justify-content:space-between;align-items:center;z-index:1000;}
+.logo{font-size:20px;font-weight:bold;}
+.navbar ul{list-style:none;display:flex;margin:0;padding:0;}
+.navbar ul li{margin-left:20px;}
+.navbar ul li a{color:white;text-decoration:none;font-weight:bold;}
+.navbar ul li a:hover{text-decoration:underline;}
+.container{background:#fff;width:100%;max-width:500px;margin:auto;padding:20px;border-radius:15px;box-shadow:0 12px 30px rgba(0,0,0,.2);}
+h2,h3,h4{text-align:center;}
+input,button{width:100%;padding:12px;margin:8px 0;border-radius:6px;border:1px solid #ccc;font-size:16px;}
+button{background:#6a11cb;color:white;border:none;cursor:pointer;font-weight:bold;}
+button:hover{background:#2575fc;}
+.option{background:#eee;padding:10px;margin:8px 0;border-radius:6px;cursor:pointer;}
+.option.correct{background:#4caf50;color:white;}
+.option.wrong{background:#f44336;color:white;}
+.option:hover:not(.correct):not(.wrong){background:#dcdcff;}
+.levels{display:flex;justify-content:space-between;margin:10px 0;}
+.levels div{flex:1;margin:0 5px;padding:10px;background:#eee;border-radius:8px;text-align:center;font-weight:bold;cursor:pointer;}
+.levels div.selected{background:#6a11cb;color:white;}
+.hide{display:none;}
+.footer{position:fixed;bottom:0;left:0;width:100%;background:#6a11cb;color:white;text-align:center;padding:10px;font-size:14px;}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="logo">QuizWise</div>
+  <ul>
+    <li><a href="#" onclick="goHome()">Home</a></li>
+    <li><a href="#" onclick="startQuiz()">Start Quiz</a></li>
+    <li><a href="#" onclick="showCreate()">Create Quiz</a></li>
+  </ul>
+</nav>
+
+<div class="container">
+
+<div id="home">
+<h2>QuizWise</h2>
+<input id="name" placeholder="Enter your name">
+<h3>Select Level</h3>
+<div class="levels">
+  <div data-level="easy">Easy</div>
+  <div data-level="medium">Medium</div>
+  <div data-level="hard">Hard</div>
+</div>
+<button onclick="startQuiz()">Start Quiz</button>
+<button onclick="showCreate()">Create Quiz</button>
+</div>
+
+<div id="quiz" class="hide">
+<h3 id="welcome"></h3>
+<h4 id="question"></h4>
+<div id="options"></div>
+</div>
+
+
+<div id="create" class="hide">
+<h2>Create Quiz</h2>
+<input id="cq-question" placeholder="Enter Question">
+<input id="cq-op1" placeholder="Option 1">
+<input id="cq-op2" placeholder="Option 2">
+<input id="cq-op3" placeholder="Option 3">
+<input id="cq-op4" placeholder="Option 4">
+<input id="cq-ans" placeholder="Correct option number (0-3)">
+<small>0 = Option 1 , 3 = Option 4</small>
+<button onclick="addQuestion()">Add Question</button>
+<button onclick="goHome()">Back</button>
+</div>
+
+<div id="result" class="hide">
+<h2>Result</h2>
+<h3 id="score"></h3>
+<button onclick="restart()">Play Again</button>
+</div>
+
+</div>
+
+<footer class="footer">
+© 2026 QuizWise | Created by MADHA ISLAM | Think, Play, Learn!
+</footer>
+
+<script>
+let currentQ=0, score=0, questions=[], selectedLevel="easy";
+
+document.querySelectorAll(".levels div").forEach(el=>{
+  el.onclick=()=>{
+    document.querySelectorAll(".levels div").forEach(d=>d.classList.remove("selected"));
+    el.classList.add("selected");
+    selectedLevel=el.dataset.level;
+  }
+});
+
+const data={
+easy:[
+{q:"Capital of Pakistan?",o:["Karachi","Islamabad","Lahore","Quetta"],a:1},
+{q:"National flower?",o:["Rose","Jasmine","Tulip","Sunflower"],a:1},
+{q:"2+2=?",o:["3","4","5","6"],a:1},
+{q:"Earth is a?",o:["Star","Planet","Moon","Sun"],a:1},
+{q:"Fastest land animal?",o:["Lion","Cheetah","Horse","Tiger"],a:1},
+{q:"Sun rises from?",o:["West","East","North","South"],a:1},
+{q:"Water formula?",o:["H2O","CO2","O2","NaCl"],a:0},
+{q:"5×5=?",o:["10","15","20","25"],a:3},
+{q:"Opposite of hot?",o:["Warm","Cold","Fire","Heat"],a:1},
+{q:"Pakistan independence year?",o:["1945","1946","1947","1948"],a:2}
+],
+medium:[
+{q:"Speed of light?",o:["3×10⁸","3×10⁶","3×10⁵","3×10⁴"],a:0},
+{q:"Largest planet?",o:["Earth","Mars","Jupiter","Saturn"],a:2},
+{q:"DNA full form?",o:["Deoxyribonucleic Acid","Dynamic Acid","Nitric Acid","None"],a:0},
+{q:"Boiling point of water?",o:["90°C","100°C","80°C","120°C"],a:1},
+{q:"Gravity unit?",o:["Newton","Joule","Watt","Volt"],a:0},
+{q:"Largest ocean?",o:["Atlantic","Indian","Pacific","Arctic"],a:2},
+{q:"Light year measures?",o:["Time","Distance","Speed","Mass"],a:1},
+{q:"Brain largest part?",o:["Cerebrum","Cerebellum","Brain stem","Hypothalamus"],a:0},
+{q:"Force formula?",o:["F=ma","F=mv","E=mc²","P=mv"],a:0},
+{q:"Human body oxygen approx?",o:["20%","21%","19%","25%"],a:1}
+],
+hard:[
+{q:"Quantum of light?",o:["Photon","Electron","Proton","Neutron"],a:0},
+{q:"Planck constant?",o:["6.63×10⁻³⁴","3.14","9.81","1.6×10⁻¹⁹"],a:0},
+{q:"Speed of sound?",o:["343 m/s","300 m/s","400 m/s","500 m/s"],a:0},
+{q:"Einstein theory?",o:["Relativity","Gravity","Quantum","Newton"],a:0},
+{q:"Avogadro number?",o:["6.02×10²³","6.02×10²²","3.02×10²³","1.6×10²³"],a:0},
+{q:"Strongest bone?",o:["Femur","Skull","Spine","Rib"],a:0},
+{q:"Fastest animal?",o:["Cheetah","Falcon","Horse","Dog"],a:1},
+{q:"Hardest natural substance?",o:["Diamond","Graphite","Quartz","Topaz"],a:0},
+{q:"Electron charge?",o:["1.6×10⁻¹⁹ C","1.6×10⁻²⁰","1.6×10⁻¹⁸","1.6×10⁻¹⁷"],a:0},
+{q:"Chemical symbol gold?",o:["Au","Ag","Gd","Go"],a:0},
+{q:"Largest star?",o:["Sun","VY Canis Majoris","Sirius","Betelgeuse"],a:1}
+]
+};
+
+function startQuiz(){
+  let name=document.getElementById("name").value.trim();
+  if(name===""){alert("Enter your name");return;}
+  questions=data[selectedLevel];
+  currentQ=0; score=0;
+  document.getElementById("welcome").innerText="Welcome "+name+" | "+selectedLevel.toUpperCase();
+  hideAll(); document.getElementById("quiz").classList.remove("hide");
+  loadQuestion();
+}
+
+function loadQuestion(){
+  let q=questions[currentQ];
+  document.getElementById("question").innerText=q.q;
+  let opt=document.getElementById("options");
+  opt.innerHTML="";
+  q.o.forEach((op,i)=>{
+    let d=document.createElement("div");
+    d.className="option"; d.innerText=op;
+    d.onclick=()=>{
+      if(i===q.a){d.classList.add("correct");score++;}
+      else d.classList.add("wrong");
+      document.querySelectorAll(".option").forEach(o=>o.style.pointerEvents="none");
+      setTimeout(()=>{currentQ++;currentQ<questions.length?loadQuestion():showResult();},500);
+    };
+    opt.appendChild(d);
+  });
+}
+
+function showResult(){
+  hideAll(); document.getElementById("result").classList.remove("hide");
+  document.getElementById("score").innerText=`Score: ${score}/${questions.length}`;
+}
+
+function addQuestion(){
+  let q=document.getElementById("cq-question").value.trim();
+  let o1=document.getElementById("cq-op1").value.trim();
+  let o2=document.getElementById("cq-op2").value.trim();
+  let o3=document.getElementById("cq-op3").value.trim();
+  let o4=document.getElementById("cq-op4").value.trim();
+  let ans=document.getElementById("cq-ans").value.trim();
+  if(q===""||o1===""||o2===""||o3===""||o4===""||ans===""){alert("Fill all fields"); return;}
+  if(isNaN(ans)){alert("Answer must be 0-3"); return;}
+  ans=Number(ans); if(ans<0||ans>3){alert("Answer must be 0-3"); return;}
+  data[selectedLevel].push({q:q,o:[o1,o2,o3,o4],a:ans});
+  alert("Question added successfully ✔"); document.querySelectorAll("#create input").forEach(i=>i.value="");
+}
+
+
+function showCreate(){hideAll();document.getElementById("create").classList.remove("hide");}
+function goHome(){hideAll();document.getElementById("home").classList.remove("hide");}
+function hideAll(){["home","quiz","create","result"].forEach(id=>document.getElementById(id).classList.add("hide"));}
+function restart(){location.reload();}
+</script>
+
+</body>
+</html>
