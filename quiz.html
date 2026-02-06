@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>quizwise</title>
+<style>
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg,#ff9a9e,#fad0c4,#a18cd1,#fbc2eb);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.container{
+  background:#fff;
+  width:500%;
+  max-width:500px;
+  height:600%;
+  padding:20px;
+  border-radius:15px;
+  box-shadow:0 12px 30px rgba(0,0,0,.2);
+}
+h2,h3{text-align:center;}
+input,button{
+  width:100%;
+  height:150%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+button{
+  background:#6a11cb;
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+button:hover{background:#2575fc;}
+.option{
+  background:#eee;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  cursor:pointer;
+  transition:0.3s;
+}
+.option.correct{background:#4caf50; color:white;}
+.option.wrong{background:#f44336; color:white;}
+.option:hover{background:#dcdcff;}
+.levels{
+  display:flex;
+  justify-content:space-between;
+  margin:10px 0;
+}
+.levels div{
+  flex:1;
+  margin:0 5px;
+  padding:10px;
+  text-align:center;
+  border-radius:8px;
+  background:#eee;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.3s;
+}
+.levels div.selected{background:#6a11cb; color:white;}
+.hide{display:none;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- HOME -->
+<div id="home">
+<h2>Quiz Platform</h2>
+<input id="name" placeholder="Enter your name">
+<h3>Select Level</h3>
+<div class="levels">
+  <div data-level="easy">Easy</div>
+  <div data-level="medium">Medium</div>
+  <div data-level="hard">Hard</div>
+</div>
+<button onclick="startQuiz()">Start Quiz</button>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="hide">
+<h3 id="welcome"></h3>
+<h4 id="question"></h4>
+<div id="options"></div>
+</div>
+
+<!-- RESULT -->
+<div id="result" class="hide">
+<h2>Result</h2>
+<h3 id="score"></h3>
+<button onclick="restart()">Play Again</button>
+</div>
+
+</div>
+
+<script>
+let currentQ=0, score=0, questions=[], selectedLevel="easy";
+const nameInput=document.getElementById("name");
+
+// LEVEL selection
+document.querySelectorAll(".levels div").forEach(el=>{
+  el.addEventListener("click",()=>{
+    document.querySelectorAll(".levels div").forEach(d=>d.classList.remove("selected"));
+    el.classList.add("selected");
+    selectedLevel=el.dataset.level;
+  });
+});
+
+// SAMPLE 15 questions per level
+const data={
+easy:[
+ {q:"Capital of Pakistan?",o:["Karachi","Islamabad","Lahore","Quetta"],a:1},
+ {q:"National flower?",o:["Rose","Jasmine","Tulip","Sunflower"],a:1},
+ {q:"2+2=?",o:["3","4","5","6"],a:1},
+ {q:"Earth is a?",o:["Planet","Star","Moon","Sun"],a:0},
+ {q:"Color of sky?",o:["Blue","Red","Green","Yellow"],a:0},
+ {q:"Water formula?",o:["H2O","CO2","O2","NaCl"],a:0},
+ {q:"Sun rises from?",o:["West","East","North","South"],a:1},
+ {q:"5*5=?",o:["10","15","20","25"],a:3},
+ {q:"Primary color?",o:["Red","Pink","Purple","Brown"],a:0},
+ {q:"5-2=?",o:["1","2","3","4"],a:2},
+ {q:"Pakistan founded in?",o:["1945","1946","1947","1948"],a:2},
+ {q:"Moon is?",o:["Star","Planet","Satellite","Comet"],a:2},
+ {q:"2*6=?",o:["10","12","14","16"],a:1},
+ {q:"Opposite of hot?",o:["Cold","Warm","Cool","Fire"],a:0},
+ {q:"Fastest land animal?",o:["Tiger","Cheetah","Lion","Elephant"],a:1}
+],
+medium:[
+ {q:"Speed of light?",o:["3x10^8 m/s","3x10^6","3x10^5","3x10^4"],a:0},
+ {q:"H2O is?",o:["Oxygen","Hydrogen","Water","Helium"],a:2},
+ {q:"Earth circumference?",o:["40000 km","50000 km","30000 km","45000 km"],a:0},
+ {q:"Largest ocean?",o:["Pacific","Atlantic","Indian","Arctic"],a:0},
+ {q:"Light year measures?",o:["Time","Distance","Speed","Mass"],a:1},
+ {q:"Sun is a?",o:["Planet","Star","Moon","Comet"],a:1},
+ {q:"Moon phases?",o:["3","4","8","6"],a:2},
+ {q:"Boiling point water?",o:["90°C","100°C","80°C","120°C"],a:1},
+ {q:"Gravity unit?",o:["Newton","Joule","Watt","Volt"],a:0},
+ {q:"Body oxygen approx?",o:["20%","21%","19%","25%"],a:1},
+ {q:"Force formula?",o:["F=ma","F=mv","E=mc^2","P=mv"],a:0},
+ {q:"Largest planet?",o:["Earth","Mars","Jupiter","Saturn"],a:2},
+ {q:"DNA full form?",o:["Deoxyribo Nucleic Acid","Deoxyribo Nitric Acid","Dioxin Nucleic Acid","None"],a:0},
+ {q:"Brain largest part?",o:["Cerebrum","Cerebellum","Brain stem","Hypothalamus"],a:0},
+ {q:"Lightning speed?",o:["30,000 km/s","100,000 km/s","300,000 km/s","50,000 km/s"],a:2}
+],
+hard:[
+ {q:"Quantum of light?",o:["Photon","Electron","Proton","Neutron"],a:0},
+ {q:"Schrodinger equation?",o:["E=mc^2","iħ∂ψ/∂t=Hψ","F=ma","V=IR"],a:1},
+ {q:"Speed sound?",o:["343 m/s","300 m/s","400 m/s","500 m/s"],a:0},
+ {q:"Heaviest naturally element?",o:["Uranium","Osmium","Lead","Gold"],a:0},
+ {q:"Pythagoras theorem?",o:["a^2+b^2=c^2","a^2-b^2=c^2","a+b=c","a-b=c"],a:0},
+ {q:"Planck constant?",o:["6.63x10^-34","3.14","9.81","1.6x10^-19"],a:0},
+ {q:"Electron charge?",o:["1.6x10^-19 C","1.6x10^-20","1.6x10^-18","1.6x10^-17"],a:0},
+ {q:"Avogadro number?",o:["6.02x10^23","6.02x10^22","3.02x10^23","1.6x10^23"],a:0},
+ {q:"Boltzmann constant?",o:["1.38x10^-23","2.38x10^-23","3.38x10^-23","4.38x10^-23"],a:0},
+ {q:"Einstein theory?",o:["Relativity","Gravity","Quantum","Newton"],a:0},
+ {q:"Largest star?",o:["Sun","VY Canis","Sirius","Betelgeuse"],a:1},
+ {q:"Strongest bone?",o:["Femur","Skull","Tibia","Spine"],a:0},
+ {q:"Fastest animal?",o:["Cheetah","Falcon","Lion","Horse"],a:1},
+ {q:"Hardest natural substance?",o:["Diamond","Graphite","Quartz","Topaz"],a:0},
+ {q:"Chemical symbol gold?",o:["Au","Ag","Gd","Go"],a:0},
+ {q:"Heaviest metal?",o:["Osmium","Lead","Gold","Uranium"],a:0}
+]
+};
+
+function startQuiz(){
+  let name=nameInput.value;
+  if(name===""){alert("Enter name"); return;}
+  questions=data[selectedLevel];
+  currentQ=0; score=0;
+  document.getElementById("welcome").innerText="Welcome "+name+" | "+selectedLevel.toUpperCase();
+  document.getElementById("home").classList.add("hide");
+  document.getElementById("quiz").classList.remove("hide");
+  loadQuestion();
+}
+
+function loadQuestion(){
+  let q=questions[currentQ];
+  document.getElementById("question").innerText=q.q;
+  let optDiv=document.getElementById("options");
+  optDiv.innerHTML="";
+  q.o.forEach((op,i)=>{
+    let d=document.createElement("div");
+    d.className="option";
+    d.innerText=op;
+    d.onclick=function(){
+      if(i===q.a){ d.classList.add("correct"); score++; }
+      else{ d.classList.add("wrong"); }
+      document.querySelectorAll(".option").forEach(o=>o.style.pointerEvents="none");
+      setTimeout(()=>{
+        currentQ++;
+        if(currentQ<questions.length) loadQuestion();
+        else showResult();
+      },500);
+    };
+    optDiv.appendChild(d);
+  });
+}
+
+function showResult(){
+  document.getElementById("quiz").classList.add("hide");
+  document.getElementById("result").classList.remove("hide");
+  document.getElementById("score").innerText=`Score: ${score} / ${questions.length}`;
+}
+
+function restart(){location.reload();}
+</script>
+</body>
+</html>
